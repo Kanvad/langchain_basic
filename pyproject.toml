@@ -1,0 +1,24 @@
+[project]
+name = "rag-langchain"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "kanvad", email = "tanphat070500@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.4.4",
+    "langchain-mistralai>=1.1.6",
+    "langchain-openrouter>=0.2.9",
+    "langsmith>=0.14.5",
+    "mistralai>=3.1.0",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+rag-langchain = "rag_langchain:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
