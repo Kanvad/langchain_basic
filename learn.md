@@ -3,4 +3,5 @@
 - [weather](./examples/weather.py)
 - [simple chat](./examples/simple_chat.py)
   - [conversation](./examples/conversation.py)
+  - [streaming response](./examples/streaming.py)
 - 
