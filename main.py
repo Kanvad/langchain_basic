@@ -11,14 +11,5 @@ model = init_chat_model(
     temperature=0.1,
 )
 
-conversation = [
-    SystemMessage(content="You are a helpful assistant that can provide information about programming languages."),
-    HumanMessage(content="Hello, what is javascript?"),
-    AIMessage(content="JavaScript is a versatile programming language primarily used for web development"),
-    HumanMessage(content="Can you give me an example of a simple JavaScript function?")
-]
-
-response = model.invoke(conversation)
-
-print(response)
-print(response.content)
+for chunk in model.stream("what is python?"):
+    print(chunk.text, end="", flush=True)
