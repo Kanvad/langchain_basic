@@ -1,27 +1,29 @@
-import base64
+import os
 from dotenv import load_dotenv
 
-from langchain.chat_models import init_chat_model
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 
 load_dotenv()
 
-model = init_chat_model(model="openrouter:openrouter/free")
+embeddings = OpenAIEmbeddings(
+    model="liquid/lfm-2.5-embedding-350m:free",
+    api_key=os.environ["OPENROUTER_API_KEY"],
+    base_url="https://openrouter.ai/api/v1",
+    check_embedding_ctx_length=False,
+)
 
-with open("./examples/cat.jpg", "rb") as image_file:
-    image_data = base64.b64encode(image_file.read()).decode("utf-8")
+texts = [
+    "Apple makes very good computers.",
+    "I believe Apple is innovative.",
+    "I love apples.",
+    "I am a fan of MacBooks.",
+    "I enjoy oranges.",
+    "I Like Lenovo Thinkpads.",
+    "I think pears taste very good.",
+]
 
-messages = {
-    "role": "user",
-    "content": [
-        {"type": "text", "text": "Describe the content of this image."},
-        {
-            "type": "image",
-            "base64": image_data,
-            "mime_type": "image/jpeg",
-        },
-    ],
-}
+vectorstore = FAISS.from_texts(texts, embedding=embeddings)
 
-response = model.invoke([messages])
-
-print(response.content)
+# print(vectorstore.similarity_search("Apples is my favorite food.", k=7))
+print(vectorstore.similarity_search("Linux is a good operating system.", k=7))
