@@ -6,4 +6,5 @@
   - [conversation](./examples/conversation.py)
   - [streaming response](./examples/streaming.py)
 - [read image](./examples/read_image.py)
+- [rag basic](./examples/rag_basic.py)
 - 
