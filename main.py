@@ -2,38 +2,41 @@ from dotenv import load_dotenv
 from dataclasses import dataclass
 
 from langchain.agents import create_agent
-from langchain.agents.middleware import ModelRequest, ModelResponse, dynamic_prompt
+from langchain.chat_models import init_chat_model
+from langchain.agents.middleware import ModelRequest, ModelResponse, wrap_model_call
+from langchain.messages import SystemMessage, HumanMessage, AIMessage
 
 load_dotenv()
 
-@dataclass
-class Context:
-    user_role: str
+basic_model = init_chat_model(
+    model = 'openrouter:nvidia/nemotron-3.5-lightning:free'
+)
+advanced_model = init_chat_model(
+    model = 'openrouter:liquid/lfm-2.5-2.6b:free'
+)
 
-@dynamic_prompt
-def user_role_prompt(request: ModelRequest) -> str:
-    user_role = request.runtime.context.user_role
+@wrap_model_call
+def dynamic_model_selector(request: ModelRequest, handler) -> ModelResponse:
+    message_count = len(request.state["messages"])
 
-    base_prompt = 'You are a helpful and very concise assistant.'
-
-    match user_role:
-        case 'expert':
-            return f"{base_prompt} Provide detailed and technical explanations."
-        case 'beginner':
-            return f"{base_prompt} Keep explanations simple and easy to understand."
-        case 'child':
-            return f"{base_prompt} Explain everything as if you were literally talking to a five-year-old child."
-        case _:
-            return base_prompt
+    if message_count < 3:
+        model = basic_model
+    else:
+        model = advanced_model
+    
+    request.model = model
+    return handler(request)
 
 agent = create_agent(
-    model = 'openrouter:nvidia/nemotron-3.5-lightning:free',
-    middleware=[user_role_prompt],
-    context_schema=Context
+    model = basic_model,
+    middleware=[dynamic_model_selector]
 )
 
 response = agent.invoke({
-    "messages": [{"role": "user", "content": "Explain how a car engine works."}],},
-    context=Context(user_role="child"))
+    "messages": [
+        SystemMessage("You are a helpful assistant."),
+        HumanMessage("What is 1 + 1?"),],
+})
 
-print(response)
+print(response["messages"][-1].content)
+print(response["messages"][-1].response_metadata["model_name"])
