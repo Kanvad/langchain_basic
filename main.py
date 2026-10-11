@@ -1,42 +1,37 @@
+import time
 from dotenv import load_dotenv
-from dataclasses import dataclass
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
-from langchain.agents.middleware import ModelRequest, ModelResponse, wrap_model_call
+from langchain.agents.middleware import AgentMiddleware, AgentState
 from langchain.messages import SystemMessage, HumanMessage, AIMessage
 
 load_dotenv()
 
-basic_model = init_chat_model(
-    model = 'openrouter:nvidia/nemotron-3.5-lightning:free'
-)
-advanced_model = init_chat_model(
-    model = 'openrouter:liquid/lfm-2.5-2.6b:free'
-)
+class HooksDemo(AgentMiddleware):
 
-@wrap_model_call
-def dynamic_model_selector(request: ModelRequest, handler) -> ModelResponse:
-    message_count = len(request.state["messages"])
-
-    if message_count < 3:
-        model = basic_model
-    else:
-        model = advanced_model
+    def __init__(self):
+        super().__init__()
+        self.start_time = 0.0
     
-    request.model = model
-    return handler(request)
+    def before_agent(self, state: AgentState, runtime):
+        self.start_time = time.time()
+        print("Before agent triggered")
+    
+    def before_model(self, state: AgentState, runtime):
+        print("Before model")
+    
+    def after_model(self, state: AgentState, runtime):
+        print("After model")
+    
+    def after_agent(self, state: AgentState, runtime):
+        print("After agent: ", time.time() - self.start_time)
 
-agent = create_agent(
-    model = basic_model,
-    middleware=[dynamic_model_selector]
-)
+agent = create_agent('openrouter:nvidia/nemotron-3.5-lightning:free', middleware=[HooksDemo()])
 
 response = agent.invoke({
     "messages": [
         SystemMessage("You are a helpful assistant."),
-        HumanMessage("What is 1 + 1?"),],
+        HumanMessage("What is Python?"),],
 })
 
 print(response["messages"][-1].content)
-print(response["messages"][-1].response_metadata["model_name"])
