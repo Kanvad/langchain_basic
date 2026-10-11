@@ -9,4 +9,4 @@
 - [rag basic](./examples/rag_basic.py)
 - [dynamic prompt](./examples/dynamic_prompt.py)
 - [dynamic model choice](./examples/dynamic_model_choice.py)
-- 
+- [hook demo](./examples/hook.py)
